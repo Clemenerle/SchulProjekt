@@ -1,4 +1,3 @@
 # SchulProjekt
 Endles running game
-To Runn install NodeJS
-hi 
+To Run install NodeJS
