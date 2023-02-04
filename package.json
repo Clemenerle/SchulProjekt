@@ -1,0 +1,29 @@
+{
+  "name": "schulprojekt",
+  "version": "1.0.0",
+  "description": "EndlesRunner",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Clemenerle/SchulProjekt.git"
+  },
+  "keywords": [
+    "game",
+    "2d",
+    "jump",
+    "and",
+    "run"
+  ],
+  "author": "Clemens",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Clemenerle/SchulProjekt/issues"
+  },
+  "homepage": "https://github.com/Clemenerle/SchulProjekt#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
