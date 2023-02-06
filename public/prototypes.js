@@ -82,14 +82,14 @@ class Player extends Gameobject {
         this.vel.y += acc * this.engine.deltaTime * this.jumpTime;
       }
 
-      if(event.key == "d") this.dDown = true;
-      if(event.key == "a") this.aDown = true;
+      if (event.key == "d") this.dDown = true;
+      if (event.key == "a") this.aDown = true;
     };
 
-    document.onkeyup = (event) =>{
-      if(event.key == "d") this.dDown = false;
-      if(event.key == "a") this.aDown = false;
-    }
+    document.onkeyup = (event) => {
+      if (event.key == "d") this.dDown = false;
+      if (event.key == "a") this.aDown = false;
+    };
   }
 
   update() {
@@ -98,15 +98,15 @@ class Player extends Gameobject {
     this.checkGround();
     this.colisionHandler();
     this.addGravity();
-    this.move()
+    this.move();
   }
 
-  move(){
-    if(this.dDown){
+  move() {
+    if (this.dDown) {
       this.vel.x = 6 * Metric.m * this.engine.deltaTime * 10;
-    }else if(this.aDown){
+    } else if (this.aDown) {
       this.vel.x = -6 * Metric.m * this.engine.deltaTime * 10;
-    }else{
+    } else {
       this.vel.x = 0;
     }
   }
@@ -145,7 +145,7 @@ class Tile extends Gameobject {
   type = 0;
 
   onInit() {
-    console.log(this.pos)
+    console.log(this.pos);
   }
 
   draw() {
@@ -168,7 +168,5 @@ class WorldGenerator extends Gameobject {
 
   update() {}
 
-  onInit() {
-    
-  }
+  onInit() {}
 }
