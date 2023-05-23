@@ -25,7 +25,7 @@ var player = new Player(
 );
 //add gameobjects to engine
 engine.addGameobject(player);
-//engine.addGameobject(worldGen);
+engine.addGameobject(worldGen);
 console.log(engine.gameobjects);
 
 //start game loop

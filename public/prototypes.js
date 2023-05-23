@@ -171,22 +171,27 @@ class Tile extends Gameobject {
 }
 
 class WorldGenerator extends Gameobject {
-  gridWidth = 0;
-  gridHeight = 0;
+  gridWidth = 0; // Number of tiles in the grid horizontally
+  gridHeight = 0; // Number of tiles in the grid vertically
 
-  playerInstance = null;
+  playerInstance = null; // Reference to the player game object
 
-  tiles = [[]];
-  tileSize = new Vector2D(50, 50);
+  tiles = [[]]; // 2D array to store the tiles
+  tileSize = new Vector2D(50, 50); // Size of each tile
 
   update() {
+    // Update the positions of the tiles based on the current position and tile size
     for (let x = 0; x < this.tiles.length; x++) {
       for (let y = 0; y < this.tiles[x].length; y++) {
         this.tiles[x][y].pos.x = this.pos.x + x * this.tileSize.x;
         this.tiles[x][y].pos.y = this.pos.y + y * this.tileSize.y;
       }
     }
+    
+    // Update the position of the player instance
     this.playerInstance.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
+    
+    // Shift the world position to the left and regenerate the column of tiles
     if (this.pos.x >= -this.tileSize.x) {
       this.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
     } else if (this.pos.x <= -this.tileSize.x) {
@@ -196,16 +201,21 @@ class WorldGenerator extends Gameobject {
   }
 
   onInit() {
+    // Initialize the player instance and calculate grid dimensions
     this.playerInstance = this.engine.findGameobject("player");
     this.gridWidth = this.engine.width / this.tileSize.x + 1;
     this.gridHeight = this.engine.height / this.tileSize.y;
+    
+    // Generate initial columns of tiles
     for (let i = 0; i < this.gridWidth; i++) {
       this.generateColumn();
     }
+    
     console.log(this.engine.findGameobject("player"));
   }
 
   draw() {
+    // Draw all the tiles
     for (let x = 0; x < this.tiles.length; x++) {
       for (let y = 0; y < this.tiles[x].length; y++) {
         this.tiles[x][y].draw();
@@ -213,14 +223,15 @@ class WorldGenerator extends Gameobject {
     }
   }
 
-  maxGroundHeight = 1;
-  minGroundHeight = 0;
-  chunkSize = 5;
-  chunkPos = 0;
-  groundHeight = 0;
-  groundHeightChange = 0;
+  maxGroundHeight = 1; // Maximum height of the ground
+  minGroundHeight = 0; // Minimum height of the ground
+  chunkSize = 5; // Number of tiles in each chunk
+  chunkPos = 0; // Current position within the chunk
+  groundHeight = 0; // Current ground height
+  groundHeightChange = 0; // Change in ground height
 
   generateColumn() {
+    // Generate tiles for the current column based on the ground height
     for (let y = 0; y < this.gridHeight; y++) {
       if (y <= this.groundHeight) {
         this.tiles[this.tiles.length - 1].push(
@@ -237,6 +248,7 @@ class WorldGenerator extends Gameobject {
       }
     }
 
+    // Update ground height and chunk properties
     if (this.chunkPos == this.chunkSize) {
       this.groundHeightChange = Math.floor(Math.random() * 5) - 2;
       if (this.groundHeight + this.groundHeightChange > this.maxGroundHeight) {
@@ -254,11 +266,13 @@ class WorldGenerator extends Gameobject {
   }
 
   shiftColumn() {
+    // Shift the leftmost column of tiles and generate a new column
     this.tiles.shift();
     this.generateColumn();
   }
 
   getTiles() {
+    // Return the tiles array
     return this.tiles;
   }
 }
