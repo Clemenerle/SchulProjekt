@@ -1,51 +1,55 @@
 class Game {
-  gameobjects = [];
-  deltaTime = 0;
-  isRunnging = true;
-  constructor(ctx, width, height) {
-    this.ctx = ctx;
-    this.width = width;
-    this.height = height;
+  gameobjects = []; // Array zur Speicherung aller Gameobjekte
+  deltaTime = 0; // Zeitdifferenz zwischen zwei Frames
+  isRunning = true; // Flag, das angibt, ob das Spiel läuft oder nicht
 
-    this.frameStart = performance.now();
-    this.frameEnd = performance.now();
+  constructor(ctx, width, height) {
+    this.ctx = ctx; // Canvas-Kontext
+    this.width = width; // Breite des Spielfensters
+    this.height = height; // Höhe des Spielfensters
+
+    this.frameStart = performance.now(); // Zeitpunkt des aktuellen Frames
+    this.frameEnd = performance.now(); // Zeitpunkt des nächsten Frames
   }
 
   updateAndDraw() {
-    if (this.isRunnging) {
-      this.deltaTime = (this.frameEnd - this.frameStart) / 100;
+    if (this.isRunning) {
+      this.deltaTime = (this.frameEnd - this.frameStart) / 100; // Berechnung der Zeitdifferenz in Sekunden
       if (this.deltaTime == 0) {
-        this.deltaTime = 0.001;
+        this.deltaTime = 0.001; // Falls deltaTime 0 ist, wird es auf einen kleinen Wert gesetzt, um Division durch 0 zu vermeiden
       }
-      this.frameStart = performance.now();
+      this.frameStart = performance.now(); // Aktualisierung des Zeitpunkts des aktuellen Frames
 
-      this.ctx.clearRect(0, 0, this.width, this.height);
+      this.ctx.clearRect(0, 0, this.width, this.height); // Leeren des Canvas
+
+      // Aktualisierung und Zeichnung aller Gameobjekte
       for (var i = 0; i < this.gameobjects.length; i++) {
         this.gameobjects[i].update();
         this.gameobjects[i].draw();
       }
 
-      this.frameEnd = performance.now();
+      this.frameEnd = performance.now(); // Aktualisierung des Zeitpunkts des nächsten Frames
     }
   }
 
   addGameobject(obj) {
-    this.gameobjects.push(obj);
-    obj.onInit();
+    this.gameobjects.push(obj); // Hinzufügen eines Gameobjekts zum Array
+    obj.onInit(); // Aufruf der Initialisierungsmethode des Gameobjekts
   }
 
   findGameobject(name) {
-    return this.gameobjects.find((obj) => obj.name == name);
+    return this.gameobjects.find((obj) => obj.name == name); // Suchen und Rückgabe eines Gameobjekts mit einem bestimmten Namen
   }
 }
 
 class Vector2D {
   constructor(x, y) {
-    this.x = x;
-    this.y = y;
+    this.x = x; // x-Komponente des Vektors
+    this.y = y; // y-Komponente des Vektors
   }
 
   static distance(vec1, vec2) {
+    // Statische Methode zur Berechnung des Abstands zwischen zwei Vektoren
     return Math.sqrt(
       Math.pow(vec1.x - vec2.x, 2) + Math.pow(vec1.y - vec2.y, 2)
     );
@@ -54,43 +58,48 @@ class Vector2D {
 
 class Gameobject {
   constructor(engine, pos, size, name) {
-    this.engine = engine;
-    this.pos = pos;
-    this.size = size;
-    this.name = name;
+    this.engine = engine; // Referenz auf das Game-Objekt
+    this.pos = pos; // Position des Gameobjekts
+    this.size = size; // Größe des Gameobjekts
+    this.name = name; // Name des Gameobjekts
   }
-  onInit() {}
-  update() {}
-  draw() {}
+
+  onInit() {
+    // Leere Initialisierungsmethode, die von abgeleiteten Klassen überschrieben werden kann
+  }
+
+  update() {
+    // Leere Update-Methode, die von abgeleiteten Klassen überschrieben werden kann
+  }
+
+  draw() {
+    // Leere Zeichenmethode, die von abgeleiteten Klassen überschrieben werden kann
+  }
 }
 
 class Metric {
-  static km = 5000;
-  static m = 50;
-  static dm = 5;
-  static cm = 0.5;
-  static mm = 0.05;
-  static g = 9.807;
+  static km = 5000; // Faktor für Kilometer
+  static m = 50; // Faktor für Meter
+  static dm = 5; // Faktor für Dezimeter
+  static cm = 0.5; // Faktor für Zentimeter
+  static mm = 0.05; // Faktor für Millimeter
+  static g = 9.807; // Erdbeschleunigung in m/s^2
 }
 
 class Player extends Gameobject {
-  //mass in kg
-  mass = 80;
-  //vel in m/s
-  vel = new Vector2D(0, 0);
+  mass = 80; // Masse des Spielers in kg
+  vel = new Vector2D(0, 0); // Geschwindigkeit des Spielers
 
-  jumpForce = 200;
-  jumpTime = 5000;
-  isOnGround = false;
-  tiles = [[]];
-  texture = undefined;
-  dDown = false;
-  aDown = false;
-
-  
+  jumpForce = 200; // Sprungkraft des Spielers
+  jumpTime = 5000; // Sprungzeit des Spielers
+  isOnGround = false; // Flag, das angibt, ob der Spieler den Boden berührt
+  tiles = [[]]; // Array zur Speicherung der Spielkacheln
+  texture = undefined; // Textur des Spielers
+  dDown = false; // Flag, das angibt, ob die "d"-Taste gedrückt ist
+  aDown = false; // Flag, das angibt, ob die "a"-Taste gedrückt ist
 
   onInit() {
-    //handle playerInput
+    // Event-Handler für die Tastaturereignisse
     document.onkeydown = (event) => {
       if (event.key == " " && this.isOnGround) {
         this.isOnGround = false;
@@ -106,14 +115,17 @@ class Player extends Gameobject {
   }
 
   update() {
+    // Aktualisierung der Position des Spielers basierend auf seiner Geschwindigkeit und der Gravitation
     this.pos.x += this.vel.x;
     this.pos.y += this.vel.y;
-    this.checkGround();
-    this.colisionHandler();
-    this.addGravity();
+
+    this.checkGround(); // Überprüfung, ob der Spieler den Boden berührt
+    this.colisionHandler(); // Behandlung von Kollisionen mit Hindernissen
+    this.addGravity(); // Hinzufügen der Gravitationskraft zum Spieler
   }
 
   draw() {
+    // Zeichnung des Spielers auf dem Canvas
     ctx.fillStyle = "black";
     ctx.drawImage(
       this.texture,
@@ -125,10 +137,12 @@ class Player extends Gameobject {
   }
 
   addGravity() {
+    // Hinzufügen der Gravitationskraft zum Spieler
     this.vel.y += -Metric.g * Metric.m * engine.deltaTime;
   }
 
   colisionHandler() {
+    // Behandlung von Kollisionen mit Hindernissen
     if (this.pos.y <= 0) {
       this.vel.y = 0;
       this.pos.y = 0;
@@ -146,13 +160,14 @@ class Player extends Gameobject {
       ) {
         if (this.pos.y <= obstacle.pos.y + obstacle.size.y) {
           this.vel.x = 0;
-          this.engine.isRunnging = false;
+          this.engine.isRunning = false;
         }
       }
     }
   }
 
   checkGround() {
+    // Überprüfung, ob der Spieler den Boden berührt
     if (this.pos.y <= 0) {
       this.pos.y = 0;
       this.isOnGround = true;
@@ -163,13 +178,14 @@ class Player extends Gameobject {
 }
 
 class Tile extends Gameobject {
-  type = 0;
+  type = 0; // Typ der Spielkachel
 
   onInit() {
-    console.log(this.pos);
+    console.log(this.pos); // Ausgabe der Position der Spielkachel
   }
 
   draw() {
+    // Zeichnung der Spielkachel auf dem Canvas
     ctx.fillStyle = "red";
     ctx.fillRect(
       this.pos.x,
@@ -181,37 +197,40 @@ class Tile extends Gameobject {
 }
 
 class WorldGenerator extends Gameobject {
-  obstacles = [];
-  obstacleInterval = 3;
-  obstacleSpeed = 10;
-  timer = 0;
-  score = 0;
+  obstacles = []; // Array zur Speicherung von Hindernissen
+  obstacleInterval = 3; // Intervall zwischen der Erzeugung von Hindernissen
+  obstacleSpeed = 10; // Geschwindigkeit der Hindernisse
+  timer = 0; // Timer zur Verfolgung des Intervalls
+  score = 0; // Punktzahl des Spielers
+
   onInit() {
-    this.generateObstacles();
+    this.generateObstacles(); // Erzeugung von Hindernissen
     let playerInstance = this.engine.findGameobject("player");
-    playerInstance.tiles = this.obstacles;
+    playerInstance.tiles = this.obstacles; // Übergabe der Hindernisse an den Spieler
   }
 
   update() {
     this.timer += this.engine.deltaTime * 10;
     if (this.timer >= this.obstacleInterval) {
-      this.obstacleInterval = Math.random() * 1 + 0.4;
-      this.obstacleSpeed += 0.2;
+      this.obstacleInterval = Math.random() * 1 + 0.4; // Zufällige Bestimmung des Intervalls
+      this.obstacleSpeed += 0.2; // Erhöhung der Hindernisgeschwindigkeit
       this.timer = 0;
-      this.generateObstacles();
+      this.generateObstacles(); // Erzeugung von neuen Hindernissen
     }
 
     for (let i = 0; i < this.obstacles.length; i++) {
       this.obstacles[i].pos.x -=
-        this.obstacleSpeed * Metric.m * this.engine.deltaTime * 10;
+        this.obstacleSpeed * Metric.m * this.engine.deltaTime * 10; // Aktualisierung der Position der Hindernisse basierend auf ihrer Geschwindigkeit
       if (this.obstacles[i].pos.x < 0 - this.obstacles[i].size.x) {
-        this.obstacles.splice(i, 1);
-        this.score++;
+        // Überprüfung, ob Hindernis den Bildschirm verlassen hat
+        this.obstacles.splice(i, 1); // Entfernen des Hindernisses aus dem Array
+        this.score++; // Erhöhung der Punktzahl
       }
     }
   }
 
   generateObstacles() {
+    // Erzeugung von Hindernissen
     this.obstacles.push(
       new Tile(
         this.engine,
@@ -223,6 +242,7 @@ class WorldGenerator extends Gameobject {
   }
 
   draw() {
+    // Zeichnung der Hindernisse und der Punktzahl auf dem Canvas
     for (let i = 0; i < this.obstacles.length; i++) {
       this.obstacles[i].draw();
     }
