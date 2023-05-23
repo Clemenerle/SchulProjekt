@@ -24,6 +24,7 @@ var player = new Player(
   "player"
 );
 //add gameobjects to engine
+player.texture = document.getElementById("bild1");
 engine.addGameobject(player);
 engine.addGameobject(worldGen);
 console.log(engine.gameobjects);

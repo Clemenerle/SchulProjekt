@@ -83,9 +83,11 @@ class Player extends Gameobject {
   jumpTime = 5000;
   isOnGround = false;
   tiles = [[]];
-
+  texture = undefined;
   dDown = false;
   aDown = false;
+
+  
 
   onInit() {
     //handle playerInput
@@ -113,7 +115,8 @@ class Player extends Gameobject {
 
   draw() {
     ctx.fillStyle = "black";
-    ctx.fillRect(
+    ctx.drawImage(
+      this.texture,
       this.pos.x,
       this.engine.height - this.pos.y - this.size.y,
       this.size.x,
