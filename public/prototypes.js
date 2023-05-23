@@ -30,12 +30,22 @@ class Game {
     this.gameobjects.push(obj);
     obj.onInit();
   }
+
+  findGameobject(name) {
+    return this.gameobjects.find((obj) => obj.name == name);
+  }
 }
 
 class Vector2D {
   constructor(x, y) {
     this.x = x;
     this.y = y;
+  }
+
+  static distance(vec1, vec2) {
+    return Math.sqrt(
+      Math.pow(vec1.x - vec2.x, 2) + Math.pow(vec1.y - vec2.y, 2)
+    );
   }
 }
 
@@ -66,7 +76,7 @@ class Player extends Gameobject {
   //vel in m/s
   vel = new Vector2D(0, 0);
 
-  jumpForce = 80;
+  jumpForce = 120;
   jumpTime = 8000;
   isOnGround = false;
 
@@ -163,10 +173,91 @@ class WorldGenerator extends Gameobject {
   gridWidth = 0;
   gridHeight = 0;
 
+  playerInstance = null;
+
   tiles = [[]];
   tileSize = new Vector2D(50, 50);
 
-  update() {}
+  update() {
+    for (let x = 0; x < this.tiles.length; x++) {
+      for (let y = 0; y < this.tiles[x].length; y++) {
+        this.tiles[x][y].pos.x = this.pos.x + x * this.tileSize.x;
+        this.tiles[x][y].pos.y = this.pos.y + y * this.tileSize.y;
+      }
+    }
+    this.playerInstance.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
+    if (this.pos.x >= -this.tileSize.x ) {
+      this.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
+    } else if (this.pos.x <= -this.tileSize.x) {
+      this.pos.x = 0;
+      this.shiftColumn();
+    }
+  }
 
-  onInit() {}
+  onInit() {
+    this.playerInstance = this.engine.findGameobject("player");
+    this.gridWidth = this.engine.width / this.tileSize.x + 1;
+    this.gridHeight = this.engine.height / this.tileSize.y;
+    for (let i = 0; i < this.gridWidth; i++) {
+      this.generateColumn();
+    }
+    console.log(this.engine.findGameobject("player"));
+  }
+
+  draw() {
+    for (let x = 0; x < this.tiles.length; x++) {
+      for (let y = 0; y < this.tiles[x].length; y++) {
+        this.tiles[x][y].draw();
+      }
+    }
+  }
+
+  maxGroundHeight = 1;
+  minGroundHeight = 0;
+  chunkSize = 5;
+  chunkPos = 0;
+  groundHeight = 0;
+  groundHeightChange = 0;
+
+  generateColumn() {
+    for (let y = 0; y < this.gridHeight; y++) {
+      if (y <= this.groundHeight) {
+        this.tiles[this.tiles.length - 1].push(
+          new Tile(
+            this.engine,
+            new Vector2D(
+              this.pos.x + (this.tiles.length - 1) * this.tileSize.x,
+              this.pos.y + y * this.tileSize.y
+            ),
+            this.tileSize,
+            "tile"
+          )
+        );
+      }
+    }
+
+    if (this.chunkPos == this.chunkSize) {
+      this.groundHeightChange = Math.floor(Math.random() * 5) - 2;
+      if (this.groundHeight + this.groundHeightChange > this.maxGroundHeight) {
+        this.groundHeightChange = -1;
+      }
+      if (this.groundHeight + this.groundHeightChange < this.minGroundHeight) {
+        this.groundHeightChange = 1;
+      }
+      this.groundHeight += this.groundHeightChange;
+      this.chunkPos = 0;
+      this.chunkSize = Math.floor(Math.random() * 2) + 3;
+    }
+    this.chunkPos++;
+    this.tiles.push([]);
+  }
+
+  shiftColumn() {
+    this.tiles.shift();
+    this.generateColumn();
+  }
+
+  getTiles() {
+    return this.tiles;
+  }
 }
