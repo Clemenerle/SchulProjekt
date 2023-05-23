@@ -19,18 +19,18 @@ var worldGen = new WorldGenerator(
 //define player
 var player = new Player(
   engine,
-  new Vector2D(engine.width / 2 - 50 / 2, Metric.m * 5),
+  new Vector2D(engine.width / 2 - 50 / 2, Metric.m * 1),
   new Vector2D(50, 180 * Metric.cm),
   "player"
 );
 //add gameobjects to engine
 engine.addGameobject(player);
-engine.addGameobject(worldGen);
+//engine.addGameobject(worldGen);
 console.log(engine.gameobjects);
-//start game loop
-function tick() {
-  engine.updateAndDraw();
-  requestAnimationFrame(tick);
-}
 
-requestAnimationFrame(tick);
+//start game loop
+setInterval(() => {
+  engine.updateAndDraw();
+},16.666666666666668)
+
+

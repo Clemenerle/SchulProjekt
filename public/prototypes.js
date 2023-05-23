@@ -1,21 +1,22 @@
 class Game {
   gameobjects = [];
   deltaTime = 0;
+
   constructor(ctx, width, height) {
     this.ctx = ctx;
     this.width = width;
     this.height = height;
 
-    this.frameStart = Date.now();
-    this.frameEnd = Date.now();
+    this.frameStart = performance.now();
+    this.frameEnd = performance.now();
   }
 
   updateAndDraw() {
-    this.deltaTime = (this.frameEnd - this.frameStart) / 1000;
-    if (this.deltaTime < 0.001) {
+    this.deltaTime = (this.frameEnd - this.frameStart) / 100;
+    if (this.deltaTime == 0) {
       this.deltaTime = 0.001;
     }
-    this.frameStart = Date.now();
+    this.frameStart = performance.now();
 
     this.ctx.clearRect(0, 0, this.width, this.height);
     for (var i = 0; i < this.gameobjects.length; i++) {
@@ -23,7 +24,7 @@ class Game {
       this.gameobjects[i].draw();
     }
 
-    this.frameEnd = Date.now();
+    this.frameEnd = performance.now();
   }
 
   addGameobject(obj) {
@@ -76,8 +77,8 @@ class Player extends Gameobject {
   //vel in m/s
   vel = new Vector2D(0, 0);
 
-  jumpForce = 120;
-  jumpTime = 8000;
+  jumpForce = 200;
+  jumpTime = 5000;
   isOnGround = false;
 
   dDown = false;
@@ -85,11 +86,11 @@ class Player extends Gameobject {
 
   onInit() {
     //handle playerInput
-
     document.onkeydown = (event) => {
       if (event.key == " " && this.isOnGround) {
         let acc = this.jumpForce / this.mass;
         this.vel.y += acc * this.engine.deltaTime * this.jumpTime;
+        console.log(this.engine.deltaTime);
       }
 
       if (event.key == "d") this.dDown = true;
@@ -113,9 +114,9 @@ class Player extends Gameobject {
 
   move() {
     if (this.dDown) {
-      this.vel.x = 6 * Metric.m * this.engine.deltaTime * 10;
+      this.vel.x = 10 * Metric.m * this.engine.deltaTime * 10;
     } else if (this.aDown) {
-      this.vel.x = -6 * Metric.m * this.engine.deltaTime * 10;
+      this.vel.x = -10 * Metric.m * this.engine.deltaTime * 10;
     } else {
       this.vel.x = 0;
     }
@@ -186,7 +187,7 @@ class WorldGenerator extends Gameobject {
       }
     }
     this.playerInstance.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
-    if (this.pos.x >= -this.tileSize.x ) {
+    if (this.pos.x >= -this.tileSize.x) {
       this.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
     } else if (this.pos.x <= -this.tileSize.x) {
       this.pos.x = 0;
