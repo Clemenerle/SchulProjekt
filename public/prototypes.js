@@ -40,6 +40,67 @@ class Game {
   findGameobject(name) {
     return this.gameobjects.find((obj) => obj.name == name); // Suchen und Rückgabe eines Gameobjekts mit einem bestimmten Namen
   }
+
+  showGameOverMenu() {
+    // Methode zum Anzeigen des Benutzermenüs nach dem Spielende
+    this.isRunning = false;
+
+    // Erstellen des Menü-Elements
+    var gameOverMenu = document.createElement("div");
+    gameOverMenu.id = "game-over-menu"; // Hinzufügen der ID zum Menü
+    gameOverMenu.style.position = "absolute";
+    gameOverMenu.style.top = "50%";
+    gameOverMenu.style.left = "50%";
+    gameOverMenu.style.transform = "translate(-50%, -50%)";
+    gameOverMenu.style.textAlign = "center";
+
+    // Erstellen der Nachricht im Menü
+    var gameOverMessage = document.createElement("h2");
+    gameOverMessage.textContent = "Game Over";
+    gameOverMenu.appendChild(gameOverMessage);
+
+    // Erstellen der Schaltfläche "Nochmal spielen"
+    var playAgainButton = document.createElement("button");
+    playAgainButton.textContent = "Nochmal spielen";
+    playAgainButton.addEventListener("click", () => {
+      this.restartGame();
+    });
+    gameOverMenu.appendChild(playAgainButton);
+
+    // Hinzufügen des Menü-Elements zum Dokument
+    document.body.appendChild(gameOverMenu);
+  }
+
+  restartGame() {
+    // Methode zum Neustarten des Spiels
+    // Entfernen des Benutzermenüs
+    var gameOverMenu = document.getElementById("game-over-menu");
+    gameOverMenu.remove();
+
+    // Zurücksetzen des Spielzustands
+    this.isRunning = true;
+    this.gameobjects = [];
+    this.frameStart = performance.now();
+    this.frameEnd = performance.now();
+    this.deltaTime = 0;
+
+    // Erneutes Hinzufügen der Spielobjekte
+    var worldGen = new WorldGenerator(
+      this,
+      new Vector2D(0, 0),
+      new Vector2D(0, 0),
+      "worldGenerator"
+    );
+    var player = new Player(
+      this,
+      new Vector2D(3 * Metric.m, Metric.m * 5),
+      new Vector2D(50, 180 * Metric.cm),
+      "player"
+    );
+    player.texture = document.getElementById("bild1");
+    this.addGameobject(player);
+    this.addGameobject(worldGen);
+  }
 }
 
 class Vector2D {
@@ -217,6 +278,9 @@ class WorldGenerator extends Gameobject {
       this.timer = 0;
       this.generateObstacles(); // Erzeugung von neuen Hindernissen
     }
+    if (this.obstacles.some((obstacle) => this.checkCollision(obstacle))) {
+      this.engine.showGameOverMenu(); // Anzeigen des Benutzermenüs
+    }
 
     for (let i = 0; i < this.obstacles.length; i++) {
       this.obstacles[i].pos.x -=
@@ -249,5 +313,17 @@ class WorldGenerator extends Gameobject {
     ctx.fillStyle = "black";
     ctx.font = "30px Arial";
     ctx.fillText("Score: " + this.score, this.engine.width - 150, 30);
+  }
+  checkCollision(obstacle) {
+    // Methode zur Überprüfung von Kollisionen zwischen dem Spieler und einem Hindernis
+    return (
+      this.engine.findGameobject("player").pos.x +
+        this.engine.findGameobject("player").size.x >=
+        obstacle.pos.x &&
+      this.engine.findGameobject("player").pos.x <=
+        obstacle.pos.x + obstacle.size.x &&
+      this.engine.findGameobject("player").pos.y <=
+        obstacle.pos.y + obstacle.size.y
+    );
   }
 }
