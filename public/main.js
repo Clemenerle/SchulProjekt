@@ -19,7 +19,7 @@ var worldGen = new WorldGenerator(
 //define player
 var player = new Player(
   engine,
-  new Vector2D(engine.width / 2 - 50 / 2, Metric.m * 1),
+  new Vector2D(3 * Metric.m, Metric.m * 5),
   new Vector2D(50, 180 * Metric.cm),
   "player"
 );

@@ -1,7 +1,7 @@
 class Game {
   gameobjects = [];
   deltaTime = 0;
-
+  isRunnging = true;
   constructor(ctx, width, height) {
     this.ctx = ctx;
     this.width = width;
@@ -12,19 +12,21 @@ class Game {
   }
 
   updateAndDraw() {
-    this.deltaTime = (this.frameEnd - this.frameStart) / 100;
-    if (this.deltaTime == 0) {
-      this.deltaTime = 0.001;
-    }
-    this.frameStart = performance.now();
+    if (this.isRunnging) {
+      this.deltaTime = (this.frameEnd - this.frameStart) / 100;
+      if (this.deltaTime == 0) {
+        this.deltaTime = 0.001;
+      }
+      this.frameStart = performance.now();
 
-    this.ctx.clearRect(0, 0, this.width, this.height);
-    for (var i = 0; i < this.gameobjects.length; i++) {
-      this.gameobjects[i].update();
-      this.gameobjects[i].draw();
-    }
+      this.ctx.clearRect(0, 0, this.width, this.height);
+      for (var i = 0; i < this.gameobjects.length; i++) {
+        this.gameobjects[i].update();
+        this.gameobjects[i].draw();
+      }
 
-    this.frameEnd = performance.now();
+      this.frameEnd = performance.now();
+    }
   }
 
   addGameobject(obj) {
@@ -80,6 +82,7 @@ class Player extends Gameobject {
   jumpForce = 200;
   jumpTime = 5000;
   isOnGround = false;
+  tiles = [[]];
 
   dDown = false;
   aDown = false;
@@ -88,13 +91,10 @@ class Player extends Gameobject {
     //handle playerInput
     document.onkeydown = (event) => {
       if (event.key == " " && this.isOnGround) {
+        this.isOnGround = false;
         let acc = this.jumpForce / this.mass;
         this.vel.y += acc * this.engine.deltaTime * this.jumpTime;
-        console.log(this.engine.deltaTime);
       }
-
-      if (event.key == "d") this.dDown = true;
-      if (event.key == "a") this.aDown = true;
     };
 
     document.onkeyup = (event) => {
@@ -109,17 +109,6 @@ class Player extends Gameobject {
     this.checkGround();
     this.colisionHandler();
     this.addGravity();
-    this.move();
-  }
-
-  move() {
-    if (this.dDown) {
-      this.vel.x = 10 * Metric.m * this.engine.deltaTime * 10;
-    } else if (this.aDown) {
-      this.vel.x = -10 * Metric.m * this.engine.deltaTime * 10;
-    } else {
-      this.vel.x = 0;
-    }
   }
 
   draw() {
@@ -137,14 +126,32 @@ class Player extends Gameobject {
   }
 
   colisionHandler() {
-    if (this.pos.y < 0) {
+    if (this.pos.y <= 0) {
       this.vel.y = 0;
       this.pos.y = 0;
+      this.isOnGround = true;
+    } else {
+      this.isOnGround = false;
+    }
+
+    for (let i = 0; i < this.tiles.length; i++) {
+      let obstacle = this.tiles[i];
+      if (obstacle == undefined) continue;
+      if (
+        this.pos.x + this.size.x >= obstacle.pos.x &&
+        this.pos.x <= obstacle.pos.x + obstacle.size.x
+      ) {
+        if (this.pos.y <= obstacle.pos.y + obstacle.size.y) {
+          this.vel.x = 0;
+          this.engine.isRunnging = false;
+        }
+      }
     }
   }
 
   checkGround() {
     if (this.pos.y <= 0) {
+      this.pos.y = 0;
       this.isOnGround = true;
     } else {
       this.isOnGround = false;
@@ -171,108 +178,53 @@ class Tile extends Gameobject {
 }
 
 class WorldGenerator extends Gameobject {
-  gridWidth = 0; // Number of tiles in the grid horizontally
-  gridHeight = 0; // Number of tiles in the grid vertically
-
-  playerInstance = null; // Reference to the player game object
-
-  tiles = [[]]; // 2D array to store the tiles
-  tileSize = new Vector2D(50, 50); // Size of each tile
+  obstacles = [];
+  obstacleInterval = 3;
+  obstacleSpeed = 10;
+  timer = 0;
+  score = 0;
+  onInit() {
+    this.generateObstacles();
+    let playerInstance = this.engine.findGameobject("player");
+    playerInstance.tiles = this.obstacles;
+  }
 
   update() {
-    // Update the positions of the tiles based on the current position and tile size
-    for (let x = 0; x < this.tiles.length; x++) {
-      for (let y = 0; y < this.tiles[x].length; y++) {
-        this.tiles[x][y].pos.x = this.pos.x + x * this.tileSize.x;
-        this.tiles[x][y].pos.y = this.pos.y + y * this.tileSize.y;
-      }
+    this.timer += this.engine.deltaTime * 10;
+    if (this.timer >= this.obstacleInterval) {
+      this.obstacleInterval = Math.random() * 1 + 0.4;
+      this.obstacleSpeed += 0.2;
+      this.timer = 0;
+      this.generateObstacles();
     }
-    
-    // Update the position of the player instance
-    this.playerInstance.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
-    
-    // Shift the world position to the left and regenerate the column of tiles
-    if (this.pos.x >= -this.tileSize.x) {
-      this.pos.x -= 6 * Metric.m * this.engine.deltaTime * 10;
-    } else if (this.pos.x <= -this.tileSize.x) {
-      this.pos.x = 0;
-      this.shiftColumn();
+
+    for (let i = 0; i < this.obstacles.length; i++) {
+      this.obstacles[i].pos.x -=
+        this.obstacleSpeed * Metric.m * this.engine.deltaTime * 10;
+      if (this.obstacles[i].pos.x < 0 - this.obstacles[i].size.x) {
+        this.obstacles.splice(i, 1);
+        this.score++;
+      }
     }
   }
 
-  onInit() {
-    // Initialize the player instance and calculate grid dimensions
-    this.playerInstance = this.engine.findGameobject("player");
-    this.gridWidth = this.engine.width / this.tileSize.x + 1;
-    this.gridHeight = this.engine.height / this.tileSize.y;
-    
-    // Generate initial columns of tiles
-    for (let i = 0; i < this.gridWidth; i++) {
-      this.generateColumn();
-    }
-    
-    console.log(this.engine.findGameobject("player"));
+  generateObstacles() {
+    this.obstacles.push(
+      new Tile(
+        this.engine,
+        new Vector2D(this.engine.width, 0),
+        new Vector2D(50 * Metric.cm, 1.5 * Metric.m),
+        "tile"
+      )
+    );
   }
 
   draw() {
-    // Draw all the tiles
-    for (let x = 0; x < this.tiles.length; x++) {
-      for (let y = 0; y < this.tiles[x].length; y++) {
-        this.tiles[x][y].draw();
-      }
+    for (let i = 0; i < this.obstacles.length; i++) {
+      this.obstacles[i].draw();
     }
-  }
-
-  maxGroundHeight = 1; // Maximum height of the ground
-  minGroundHeight = 0; // Minimum height of the ground
-  chunkSize = 5; // Number of tiles in each chunk
-  chunkPos = 0; // Current position within the chunk
-  groundHeight = 0; // Current ground height
-  groundHeightChange = 0; // Change in ground height
-
-  generateColumn() {
-    // Generate tiles for the current column based on the ground height
-    for (let y = 0; y < this.gridHeight; y++) {
-      if (y <= this.groundHeight) {
-        this.tiles[this.tiles.length - 1].push(
-          new Tile(
-            this.engine,
-            new Vector2D(
-              this.pos.x + (this.tiles.length - 1) * this.tileSize.x,
-              this.pos.y + y * this.tileSize.y
-            ),
-            this.tileSize,
-            "tile"
-          )
-        );
-      }
-    }
-
-    // Update ground height and chunk properties
-    if (this.chunkPos == this.chunkSize) {
-      this.groundHeightChange = Math.floor(Math.random() * 5) - 2;
-      if (this.groundHeight + this.groundHeightChange > this.maxGroundHeight) {
-        this.groundHeightChange = -1;
-      }
-      if (this.groundHeight + this.groundHeightChange < this.minGroundHeight) {
-        this.groundHeightChange = 1;
-      }
-      this.groundHeight += this.groundHeightChange;
-      this.chunkPos = 0;
-      this.chunkSize = Math.floor(Math.random() * 2) + 3;
-    }
-    this.chunkPos++;
-    this.tiles.push([]);
-  }
-
-  shiftColumn() {
-    // Shift the leftmost column of tiles and generate a new column
-    this.tiles.shift();
-    this.generateColumn();
-  }
-
-  getTiles() {
-    // Return the tiles array
-    return this.tiles;
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.fillText("Score: " + this.score, this.engine.width - 150, 30);
   }
 }
