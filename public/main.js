@@ -1,6 +1,6 @@
 var canvas = document.getElementById("canvas");
-var width = 1000;
-var height = 500;
+var width = 2488;
+var height = 1200;
 
 canvas.width = width;
 canvas.height = height;
